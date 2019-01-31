@@ -1,3 +1,105 @@
-<div id="myReactApp">
-  <h1>Hello World!</h1>
-</div>
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <cassert>
+using namespace std;
+
+struct Node {
+	string val;
+	Node* next;
+};
+
+Node* makeList () {
+	Node* head = NULL;
+	string token;
+	if (cin >> token) {
+		head = new Node();
+		head->val = token;
+		head->next = NULL;
+		Node* temp = head;
+		while (cin >> token) {
+			temp->next = new Node();
+			temp->next->val = token;
+			temp = temp->next;
+		}
+		temp->next = NULL;
+	}
+	return head;
+}
+
+void printList (Node* p) {
+	Node* temp = p;
+	while (temp) {
+		cout << temp->val << endl;
+		temp = temp->next;
+	}
+}
+
+void printPairInOrder (Node* p1, Node* p2) {
+	assert(p1 && p2);
+	if (p1->val > p2->val) {
+		cout << p2->val << endl << p1->val << endl;
+	} else {
+		cout << p1->val << endl << p2->val << endl;
+	}
+}
+
+Node* sortPair (Node* p1, Node* p2) {
+	assert(p1 && p2);
+	if (p1->val > p2->val) {
+		p2->next = p1;
+		p1->next = NULL;
+		return p2;
+	} else {
+		p1->next = p2;
+		p2->next = NULL;
+		return p1;
+	}
+}
+
+Node* makePairList (string s1, string s2) {
+	Node* head = new Node();
+	head->next = new Node();
+	head->next->next = NULL;
+	if (s1 > s2) {
+		head->val = s2;
+		head->next->val = s1;
+	} else {
+		head->val = s1;
+		head->next->val = s2;
+	}
+	return head;
+}
+
+Node* append (Node* p1, Node* p2) {
+	if (p1 == NULL) {
+		return p2;
+	} else if (p2 == NULL) {
+		return p1;
+	} else {
+		Node* temp = p1;
+		while (temp->next) {
+			temp = temp->next;
+		}
+		temp->next = p2;
+		return p1;		
+	}
+}
+
+void printReverseRecursive () {
+	string token;
+	if (cin>>token) {
+		printReverseRecursive();
+		cout << token << endl;
+		return;
+	} else {
+		return;
+	}
+}
+/*
+int main (int argc, char* argv[]) {
+	printReverseRecursive();
+}
+*/
