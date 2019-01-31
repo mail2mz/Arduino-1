@@ -103,3 +103,676 @@ int main (int argc, char* argv[]) {
 	printReverseRecursive();
 }
 */
+
+
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+using namespace std;
+
+void printLines(vector<string> *lines, string printFormat, string printCommand, int k, string s){
+	//printFormat: f = forward, r = reverse
+	//printCommand: p = print all, k = print kth line, s = print only lines containing s
+	if (printCommand == "p") {
+		if (printFormat == "f") {
+			for (int i = 0; i < lines->size(); i++) {
+				cout << lines->at(i) << endl;
+			}
+		} else {
+			for (int i = lines->size() - 1; i >= 0; i--) {
+				cout << lines->at(i) << endl;
+			}
+		}
+	} else if (printCommand == "k") {
+		if (printFormat == "f") {
+			cout << lines->at(k) << endl;
+		} else {
+			cout << lines->at(lines->size() - k - 1) << endl;
+		}
+	} else {
+		if (printFormat == "f") {
+			for (int i = 0; i < lines->size(); i++) {
+				if (lines->at(i).find(s) != string::npos) {
+					cout << lines->at(i) << endl;
+				}
+			}
+		} else {
+			for (int i = lines->size() - 1; i >= 0; i--) {
+				if (lines->at(i).find(s) != string::npos) {
+					cout << lines->at(i) << endl;
+				}
+			}
+		}
+	}
+}
+
+string makeLine(vector<string> words, int X, string c1) { //X is the number of white spaces remaining
+	//c1: rr - right, j - even, rl - left, c - center
+	string temp;
+	if (c1 == "rr") {
+		for (int i = 0; i < words.size() - 1; i++) {
+			temp = temp + words[i] + " ";
+		}
+		temp += words[words.size() - 1];
+	} else if (c1 == "j") {
+		if (words.size() == 1) {
+			temp = words[0];
+			while (X > 0) {
+				temp += " ";
+				X--;
+			}
+		} else {
+			int i = 0;
+			while (X > 0) {
+				words[i] += " ";
+				i++;
+				if (i == words.size() - 1) {
+					i = 0;
+				}
+				X--;
+			}
+			for (int k = 0; k < words.size(); k++) {
+				temp += words[k];
+			}
+		}
+	} else if (c1 == "rl") {
+		int firstSpaces = X - words.size() + 1;
+		for (firstSpaces; firstSpaces > 0; firstSpaces --) {
+			temp += " ";
+		}
+		temp += words[0];
+		for (int i = 1; i < words.size(); i++) {
+			temp = temp + " " + words[i];
+		}
+	} else {
+		temp += words[0];
+		for (int i = 1; i < words.size(); i ++) {
+			temp = temp + " " + words[i];
+			X--;
+		}
+		for (int i = (X/2); i > 0; i --) {
+			temp = temp + " ";
+			X--;
+		}
+		for (int k = X; k > 0; k --) {
+			temp = " " + temp;
+		}
+	}
+	return temp;
+}
+
+void readFile(string fileName, vector<string> *lines, int lineLen, string jstMode) {
+
+	vector<string> words;
+
+	string token;
+	int counter = lineLen;
+
+
+        lines->clear();
+        
+	ifstream myInputFile (fileName);
+	if (!myInputFile) {
+			cerr << "Error, cannot open specified text file." << endl;
+			exit(1);
+	}
+		myInputFile >> token;
+		while (myInputFile) {
+
+			if (token.length() >= lineLen) {
+				if (words.size() > 0) {
+					lines->push_back(makeLine(words, counter + words.size(), jstMode));
+					words.clear();
+				}
+				lines->push_back(token.substr(0,lineLen));
+				counter = lineLen;
+			} else if (token.length() > counter) {
+				lines->push_back(makeLine(words, counter + words.size(), jstMode));
+				words.clear();
+				words.push_back(token);
+				counter = lineLen - token.length() - 1;
+			} else if (token.length() == counter) {
+				words.push_back(token);
+				counter = counter - token.length() - 1;
+				lines->push_back(makeLine(words, counter + words.size(), jstMode));
+				words.clear();
+				counter = lineLen;
+			} else {
+				words.push_back(token);
+				counter = counter - token.length() - 1;
+			}
+			myInputFile >> token;
+		}
+		if (words.size() > 0) {
+			lines->push_back(makeLine(words, counter + words.size(), jstMode));
+			words.clear();
+		}
+		myInputFile.close();
+}
+
+
+int main (int argc, char* argv[]) {
+	int N;
+	string textFileName;
+	cin >> N >> textFileName;
+	if (N <= 0) {
+		cerr << "Error, line length must be positive." << endl;
+		exit(1);
+	}
+	ifstream myInputFile (textFileName.c_str());
+	if (!myInputFile) {
+		cerr << "Error, cannot open specified text file." << endl;
+		exit(1);
+	}
+
+
+    string token;
+    vector<string> lineToPrint;
+
+	/*
+	vector<string> lines_rr;
+	vector<string> lines_rl;
+	vector<string> lines_j;
+	vector<string> lines_c;
+	vector<string> words;
+
+	int counter = N;
+	string token;
+	myInputFile >> token;
+	while (myInputFile) {
+		if (token.length() >= N) {
+			if (words.size() > 0) {
+				lines_rr.push_back(makeLine(words, counter + words.size(), "rr"));
+				lines_rl.push_back(makeLine(words, counter + words.size(), "rl"));
+				lines_j.push_back(makeLine(words, counter + words.size(), "j"));
+				lines_c.push_back(makeLine(words, counter + words.size(), "c"));
+				words.clear();
+			}
+			lines_rr.push_back(token.substr(0,N));
+			lines_rl.push_back(token.substr(0,N));
+			lines_j.push_back(token.substr(0,N));
+			lines_c.push_back(token.substr(0,N));
+			counter = N;
+		} else if (token.length() > counter) {
+			lines_rr.push_back(makeLine(words, counter + words.size(), "rr"));
+			lines_rl.push_back(makeLine(words, counter + words.size(), "rl"));
+			lines_j.push_back(makeLine(words, counter + words.size(), "j"));
+			lines_c.push_back(makeLine(words, counter + words.size(), "c"));
+			words.clear();
+			words.push_back(token);
+			counter = N - token.length() - 1;
+		} else if (token.length() == counter) {
+			words.push_back(token);
+			counter = counter - token.length() - 1;
+			lines_rr.push_back(makeLine(words, counter + words.size(), "rr"));
+			lines_rl.push_back(makeLine(words, counter + words.size(), "rl"));
+			lines_j.push_back(makeLine(words, counter + words.size(), "j"));
+			lines_c.push_back(makeLine(words, counter + words.size(), "c"));
+			words.clear();
+			counter = N;
+		} else {
+			words.push_back(token);
+			counter = counter - token.length() - 1;
+		}
+		myInputFile >> token;
+	}
+	if (words.size() > 0) {
+		lines_rr.push_back(makeLine(words, counter + words.size(), "rr"));
+		lines_rl.push_back(makeLine(words, counter + words.size(), "rl"));
+		lines_j.push_back(makeLine(words, counter + words.size(), "j"));
+		lines_c.push_back(makeLine(words, counter + words.size(), "c"));
+		words.clear();
+	}
+	myInputFile.close();
+	*/
+
+        readFile(textFileName, &lineToPrint, N, "rr");
+	vector<string> *printJustification = &lineToPrint;
+	string printFormat = "f";
+	int k = 0;
+	string s = "";
+	cin >> token;
+	while (cin) {
+		if (token == "rr") {
+			readFile(textFileName, &lineToPrint, N, "rr");
+			printJustification = &lineToPrint;
+		} else if (token == "rl") {
+			readFile(textFileName, &lineToPrint, N, "rl");
+			printJustification = &lineToPrint;
+		} else if (token == "j") {
+			readFile(textFileName, &lineToPrint, N, "j");
+			printJustification = &lineToPrint;
+		} else if (token == "c") {
+			readFile(textFileName, &lineToPrint, N, "c");
+			printJustification = &lineToPrint;
+		} else if (token == "f") {
+			printFormat = "f";
+		} else if (token == "r") {
+			printFormat = "r";
+		} else if (token == "q") {
+			exit(0);
+		} else if (token == "p") {
+		cout << "token is p" << endl;
+			printLines(printJustification, printFormat, "p", k, s);
+
+		} else if (token == "k") {
+			cin >> k;
+			cout << "token is k" << endl;
+			printLines(printJustification, printFormat, "k", k, s);
+		} else if (token == "s") {
+			cin >> s;
+			cout << "token is s" << endl;
+			printLines(printJustification, printFormat, "s", k, s);
+		} else {
+			cerr << "Error, command is illegal." << endl;
+			exit(1);
+		}
+		cin >> token;
+	}
+}
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+using namespace std;
+
+void printLines(vector<string> *lines, string printFormat, string printCommand, int k, string s){
+	//printFormat: f = forward, r = reverse
+	//printCommand: p = print all, k = print kth line, s = print only lines containing s
+	if (printCommand == "p") {
+		if (printFormat == "f") {
+			for (int i = 0; i < lines->size(); i++) {
+				cout << lines->at(i) << endl;
+			}
+		} else {
+			for (int i = lines->size() - 1; i >= 0; i--) {
+				cout << lines->at(i) << endl;
+			}
+		}
+	} else if (printCommand == "k") {
+		if (printFormat == "f") {
+			cout << lines->at(k) << endl;
+		} else {
+			cout << lines->at(lines->size() - k - 1) << endl;
+		}
+	} else {
+		if (printFormat == "f") {
+			for (int i = 0; i < lines->size(); i++) {
+				if (lines->at(i).find(s) != string::npos) {
+					cout << lines->at(i) << endl;
+				}
+			}
+		} else {
+			for (int i = lines->size() - 1; i >= 0; i--) {
+				if (lines->at(i).find(s) != string::npos) {
+					cout << lines->at(i) << endl;
+				}
+			}
+		}
+	}
+}
+
+string makeLine(vector<string> words, int X, string c1) { //X is the number of white spaces remaining
+	//c1: rr - right, j - even, rl - left, c - center
+	string temp;
+	if (c1 == "rr") {
+		for (int i = 0; i < words.size() - 1; i++) {
+			temp = temp + words[i] + " ";
+		}
+		temp += words[words.size() - 1];
+	} else if (c1 == "j") {
+		if (words.size() == 1) {
+			temp = words[0];
+			while (X > 0) {
+				temp += " ";
+				X--;
+			}
+		} else {
+			int i = 0;
+			while (X > 0) {
+				words[i] += " ";
+				i++;
+				if (i == words.size() - 1) {
+					i = 0;
+				}
+				X--;
+			}
+			for (int k = 0; k < words.size(); k++) {
+				temp += words[k];
+			}
+		}
+	} else if (c1 == "rl") {
+		int firstSpaces = X - words.size() + 1;
+		for (firstSpaces; firstSpaces > 0; firstSpaces --) {
+			temp += " ";
+		}
+		temp += words[0];
+		for (int i = 1; i < words.size(); i++) {
+			temp = temp + " " + words[i];
+		}
+	} else {
+		temp += words[0];
+		for (int i = 1; i < words.size(); i ++) {
+			temp = temp + " " + words[i];
+			X--;
+		}
+		for (int i = (X/2); i > 0; i --) {
+			temp = temp + " ";
+			X--;
+		}
+		for (int k = X; k > 0; k --) {
+			temp = " " + temp;
+		}
+	}
+	return temp;
+}
+
+int main (int argc, char* argv[]) {
+	int N;
+	string textFileName;
+	cin >> N >> textFileName;
+	if (N <= 0) {
+		cerr << "Error, line length must be positive." << endl;
+		exit(1);
+	}
+	ifstream myInputFile (textFileName.c_str());
+	if (!myInputFile) {
+		cerr << "Error, cannot open specified text file." << endl;
+		exit(1);
+	}
+
+	vector<string> lines_rr;
+	vector<string> lines_rl;
+	vector<string> lines_j;
+	vector<string> lines_c;
+	vector<string> words;
+
+	int counter = N;
+	string token;
+	myInputFile >> token;
+	while (myInputFile) {
+		if (token.length() >= N) {
+			if (words.size() > 0) {
+				lines_rr.push_back(makeLine(words, counter + words.size(), "rr"));
+				lines_rl.push_back(makeLine(words, counter + words.size(), "rl"));
+				lines_j.push_back(makeLine(words, counter + words.size(), "j"));
+				lines_c.push_back(makeLine(words, counter + words.size(), "c"));
+				words.clear();
+			}
+			lines_rr.push_back(token.substr(0,N));
+			lines_rl.push_back(token.substr(0,N));
+			lines_j.push_back(token.substr(0,N));
+			lines_c.push_back(token.substr(0,N));
+			counter = N;
+		} else if (token.length() > counter) {
+			lines_rr.push_back(makeLine(words, counter + words.size(), "rr"));
+			lines_rl.push_back(makeLine(words, counter + words.size(), "rl"));
+			lines_j.push_back(makeLine(words, counter + words.size(), "j"));
+			lines_c.push_back(makeLine(words, counter + words.size(), "c"));
+			words.clear();
+			words.push_back(token);
+			counter = N - token.length() - 1;
+		} else if (token.length() == counter) {
+			words.push_back(token);
+			counter = counter - token.length() - 1;
+			lines_rr.push_back(makeLine(words, counter + words.size(), "rr"));
+			lines_rl.push_back(makeLine(words, counter + words.size(), "rl"));
+			lines_j.push_back(makeLine(words, counter + words.size(), "j"));
+			lines_c.push_back(makeLine(words, counter + words.size(), "c"));
+			words.clear();
+			counter = N;
+		} else {
+			words.push_back(token);
+			counter = counter - token.length() - 1;
+		}
+		myInputFile >> token;
+	}
+	if (words.size() > 0) {
+		lines_rr.push_back(makeLine(words, counter + words.size(), "rr"));
+		lines_rl.push_back(makeLine(words, counter + words.size(), "rl"));
+		lines_j.push_back(makeLine(words, counter + words.size(), "j"));
+		lines_c.push_back(makeLine(words, counter + words.size(), "c"));
+		words.clear();
+	}
+	myInputFile.close();
+
+	vector<string> *printJustification = &lines_rr;
+	string printFormat = "f";
+	int k = 0;
+	string s = "";
+	cin >> token;
+	while (cin) {
+		if (token == "rr") {
+			printJustification = &lines_rr;
+		} else if (token == "rl") {
+			printJustification = &lines_rl;
+		} else if (token == "j") {
+			printJustification = &lines_j;
+		} else if (token == "c") {
+			printJustification = &lines_c;
+		} else if (token == "f") {
+			printFormat = "f";
+		} else if (token == "r") {
+			printFormat = "r";
+		} else if (token == "q") {
+			exit(0);
+		} else if (token == "p") {
+			printLines(printJustification, printFormat, "p", k, s);
+		} else if (token == "k") {
+			cin >> k;
+			printLines(printJustification, printFormat, "k", k, s);
+		} else if (token == "s") {
+			cin >> s;
+			printLines(printJustification, printFormat, "s", k, s);
+		} else {
+			cerr << "Error, command is illegal." << endl;
+			exit(1);
+		}
+		cin >> token;
+	}
+}
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+using namespace std;
+
+void printLines(vector<string> *lines, string printFormat, string printCommand, int k, string s){
+	//printFormat: f = forward, r = reverse
+	//printCommand: p = print all, k = print kth line, s = print only lines containing s
+	if (printCommand == "p") {
+		if (printFormat == "f") {
+			for (int i = 0; i < lines->size(); i++) {
+				cout << lines->at(i) << endl;
+			}
+		} else {
+			for (int i = lines->size() - 1; i >= 0; i--) {
+				cout << lines->at(i) << endl;
+			}
+		}
+	} else if (printCommand == "k") {
+		if (printFormat == "f") {
+			cout << lines->at(k) << endl;
+		} else {
+			cout << lines->at(lines->size() - k - 1) << endl;
+		}
+	} else {
+		if (printFormat == "f") {
+			for (int i = 0; i < lines->size(); i++) {
+				if (lines->at(i).find(s) != string::npos) {
+					cout << lines->at(i) << endl;
+				}
+			}
+		} else {
+			for (int i = lines->size() - 1; i >= 0; i--) {
+				if (lines->at(i).find(s) != string::npos) {
+					cout << lines->at(i) << endl;
+				}
+			}
+		}
+	}
+}
+
+string makeLine(vector<string> words, int X, string c1) { //X is the number of white spaces remaining
+	//c1: rr - right, j - even, rl - left, c - center
+	string temp;
+	if (c1 == "rr") {
+		for (int i = 0; i < words.size() - 1; i++) {
+			temp = temp + words[i] + " ";
+		}
+		temp += words[words.size() - 1];
+	} else if (c1 == "j") {
+		if (words.size() == 1) {
+			temp = words[0];
+			while (X > 0) {
+				temp += " ";
+				X--;
+			}
+		} else {
+			int i = 0;
+			while (X > 0) {
+				words[i] += " ";
+				i++;
+				if (i == words.size() - 1) {
+					i = 0;
+				}
+				X--;
+			}
+			for (int k = 0; k < words.size(); k++) {
+				temp += words[k];
+			}
+		}
+	} else if (c1 == "rl") {
+		int firstSpaces = X - words.size() + 1;
+		for (firstSpaces; firstSpaces > 0; firstSpaces --) {
+			temp += " ";
+		}
+		temp += words[0];
+		for (int i = 1; i < words.size(); i++) {
+			temp = temp + " " + words[i];
+		}
+	} else {
+		temp += words[0];
+		for (int i = 1; i < words.size(); i ++) {
+			temp = temp + " " + words[i];
+			X--;
+		}
+		for (int i = (X/2); i > 0; i --) {
+			temp = temp + " ";
+			X--;
+		}
+		for (int k = X; k > 0; k --) {
+			temp = " " + temp;
+		}
+	}
+	return temp;
+}
+
+int main (int argc, char* argv[]) {
+	int N;
+	string textFileName;
+	cin >> N >> textFileName;
+	if (N <= 0) {
+		cerr << "Error, line length must be positive." << endl;
+		exit(1);
+	}
+	ifstream myInputFile (textFileName.c_str());
+	if (!myInputFile) {
+		cerr << "Error, cannot open specified text file." << endl;
+		exit(1);
+	}
+
+	vector<string> lines_rr;
+	vector<string> lines_rl;
+	vector<string> lines_j;
+	vector<string> lines_c;
+	vector<string> words;
+
+	int counter = N;
+	string token;
+	myInputFile >> token;
+	while (myInputFile) {
+		if (token.length() >= N) {
+			if (words.size() > 0) {
+				lines_rr.push_back(makeLine(words, counter + words.size(), "rr"));
+				lines_rl.push_back(makeLine(words, counter + words.size(), "rl"));
+				lines_j.push_back(makeLine(words, counter + words.size(), "j"));
+				lines_c.push_back(makeLine(words, counter + words.size(), "c"));
+				words.clear();
+			}
+			lines_rr.push_back(token.substr(0,N));
+			lines_rl.push_back(token.substr(0,N));
+			lines_j.push_back(token.substr(0,N));
+			lines_c.push_back(token.substr(0,N));
+			counter = N;
+		} else if (token.length() > counter) {
+			lines_rr.push_back(makeLine(words, counter + words.size(), "rr"));
+			lines_rl.push_back(makeLine(words, counter + words.size(), "rl"));
+			lines_j.push_back(makeLine(words, counter + words.size(), "j"));
+			lines_c.push_back(makeLine(words, counter + words.size(), "c"));
+			words.clear();
+			words.push_back(token);
+			counter = N - token.length() - 1;
+		} else if (token.length() == counter) {
+			words.push_back(token);
+			counter = counter - token.length() - 1;
+			lines_rr.push_back(makeLine(words, counter + words.size(), "rr"));
+			lines_rl.push_back(makeLine(words, counter + words.size(), "rl"));
+			lines_j.push_back(makeLine(words, counter + words.size(), "j"));
+			lines_c.push_back(makeLine(words, counter + words.size(), "c"));
+			words.clear();
+			counter = N;
+		} else {
+			words.push_back(token);
+			counter = counter - token.length() - 1;
+		}
+		myInputFile >> token;
+	}
+	if (words.size() > 0) {
+		lines_rr.push_back(makeLine(words, counter + words.size(), "rr"));
+		lines_rl.push_back(makeLine(words, counter + words.size(), "rl"));
+		lines_j.push_back(makeLine(words, counter + words.size(), "j"));
+		lines_c.push_back(makeLine(words, counter + words.size(), "c"));
+		words.clear();
+	}
+	myInputFile.close();
+
+	vector<string> *printJustification = &lines_rr;
+	string printFormat = "f";
+	int k = 0;
+	string s = "";
+	cin >> token;
+	while (cin) {
+		if (token == "rr") {
+			printJustification = &lines_rr;
+		} else if (token == "rl") {
+			printJustification = &lines_rl;
+		} else if (token == "j") {
+			printJustification = &lines_j;
+		} else if (token == "c") {
+			printJustification = &lines_c;
+		} else if (token == "f") {
+			printFormat = "f";
+		} else if (token == "r") {
+			printFormat = "r";
+		} else if (token == "q") {
+			exit(0);
+		} else if (token == "p") {
+			printLines(printJustification, printFormat, "p", k, s);
+		} else if (token == "k") {
+			cin >> k;
+			printLines(printJustification, printFormat, "k", k, s);
+		} else if (token == "s") {
+			cin >> s;
+			printLines(printJustification, printFormat, "s", k, s);
+		} else {
+			cerr << "Error, command is illegal." << endl;
+			exit(1);
+		}
+		cin >> token;
+	}
+}
